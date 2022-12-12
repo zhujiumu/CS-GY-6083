@@ -1,5 +1,3 @@
---> Database System for Alibaba E-commerce Public Dataset
---> Jiumu Zhu, Boyuan Chen
 
 --> Vendor
 create table Vendor (
