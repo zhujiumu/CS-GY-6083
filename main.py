@@ -5,7 +5,6 @@ from configparser import ConfigParser
 
 "# Database System for Alibaba E-commerce Public Dataset"
 
-
 @st.cache
 def get_config(filename="database.ini", section="postgresql"):
     parser = ConfigParser()
@@ -113,7 +112,7 @@ if customer_name:
     st.dataframe(customer_info)
     
 
-"## platform sales ordered by date"
+"## Platform Sales Ordered by Date"
 st.write("Platforms often take commission as a percentage of the total sales conducted on the platform. The table below provides a breakdown of all historical transactions ordered by date:")
 platform_sales_sql = """
 with summary as (
@@ -133,7 +132,7 @@ platform_sales = query_db(platform_sales_sql)
 st.dataframe(platform_sales)
 
 
-"## vendor sales ordered by date"
+"## Vendor Sales Ordered by Date"
 st.write("Figures above can be further broken down by vendor, please select a vendor to view their historical sales ordered by date:")
 sql_vendor_names = "SELECT vendor_name FROM Vendor;"
 vendor_names = query_db(sql_vendor_names)["vendor_name"].tolist()
@@ -168,7 +167,8 @@ if customer_name:
     st.dataframe(vendor_info)
 
 
-"## delivery tracker"
+
+"## Delivery Tracker"
 st.write("""
 Costs associatd with losing a current customer always outweighs the benefit of acquiring a new one. 
 Among the customers, the delivery status of those who have made more than one purchase are display below:
@@ -188,7 +188,8 @@ delivery_tracker = query_db(delivery_tracker_sql)
 st.dataframe(delivery_tracker)
 
 
-"## Recurring purchases"
+
+"## Recurring Purchases"
 st.write("""
 E-commerce platforms such as Amazon may utilize information on which products are repeatedly bought. 
 Amazon introduced 'subscript and save' in 2007, which generated expectations of customer pre-orders which may translate to stable cash flows for vendors in exchange for discounts for the consumers. 
@@ -212,3 +213,52 @@ from return_customers r join options_associated_with o on r.option_id = o.option
 """
 recurring_purchases = query_db(recurring_purchases_sql)
 st.dataframe(recurring_purchases)
+
+
+
+"## SQL Playground"
+
+# Initialize table information
+category = ['category_id', 'category_name']
+product_belong = ['product_id', 'product_name', 'description', 'category_id']
+vendor = ['vendor_id', 'vendor_name', 'vendor_phone', 'vender_email']
+product_sold_vendor = ['vendor_id', 'product_id']
+carts_has_products_options = ['shopping_cart_id', 'product_id', 'option_id', 'quantity']
+options_associated_with = ['option_id', 'option_name', 'product_id', 'quantity', 'price', 'on_sale', 'specs']
+orders = ['order_id', 'total_item', 'shipping_fee', 'tax', 'total_cost', 'order_date', 'delivery_date',
+          'ship_name', 'ship_address', 'tracking_number', 'delivery_status']
+order_has_product = ['order_id', 'product_id', 'option_id', 'quantity']
+orders_placed_user = ['user_id', 'order_id']
+users = ['user_id', 'username', 'password', 'full_name', 'address', 'email', 'phone']
+user_has_creditcard = ['credit_card_number', 'user_id']
+orders_paid_creditcard = ['order_id', 'credit_card_number', 'user_id']
+
+# Code input block
+with st.form(key='query_form'):
+    raw_code = st.text_area("SQL Code Here", height=200)
+    submit_code = st.form_submit_button("Execute")
+
+# Table of Info
+with st.expander("Table Info"):
+    table_info = {'category':category, 'product_belong':product_belong, 'vendor':vendor, 'product_sold_vendor':product_sold_vendor,
+                  'carts_has_products_options':carts_has_products_options, 'options_associated_with':options_associated_with,
+                  'orders':orders, 'order_has_product':order_has_product, 'orders_placed_user':orders_placed_user,
+                  'users':users, 'user_has_creditcard':user_has_creditcard, 'orders_paid_creditcard':orders_paid_creditcard}
+    st.json(table_info)
+
+# Results Layouts
+if submit_code:
+    st.info("Query Submitted")
+    st.code(raw_code)
+
+    # Results
+    query_results = query_db(raw_code)
+    # with st.expander("Results"):
+    #     st.write(query_results)
+
+    # with st.expander("Results"):
+    #     query_df = pd.DataFrame(query_results)
+    #     st.dataframe(query_df)
+    "#### Results"
+    query_df = pd.DataFrame(query_results)
+    st.dataframe(query_df)
