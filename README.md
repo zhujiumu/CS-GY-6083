@@ -22,10 +22,10 @@ password = [your_psql_password]
 
 ### TODO:
 - I couldn't find a case where recursive sql would be used, if you can a good use of a recursive statement, feel free to replace/add to the existing queries
-- Look into a data loading & sql playground implemented as part of the frontend
 - Record video
 
 ### Done:
 - Data loading is done via insert statement in schema.sql
 - ER diagram is revised to fit the schema.sql
 - For business insights, the queries are included in the main.py, I have 5 queries so far and touched on 'group' and 'having' clause
+- SQL playground
