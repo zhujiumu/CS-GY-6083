@@ -14,9 +14,21 @@ def get_config(filename="database.ini", section="postgresql"):
 
 
 @st.cache
-def query_db(sql: str):
-    # print(f"Running query_db(): {sql}")
+def initiate_db():
+    db_info = get_config()
+    conn = psycopg2.connect(**db_info)
+    cur = conn.cursor()
 
+    with open('schema.sql', 'r') as file:
+        schema_sql = file.read()
+    cur.execute(schema_sql)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+@st.cache
+def query_db(sql: str):
     db_info = get_config()
 
     # Connect to an existing database
@@ -27,10 +39,8 @@ def query_db(sql: str):
 
     # Execute a command: this creates a new table
     cur.execute(sql)
-
     # Obtain data
     data = cur.fetchall()
-
     column_names = [desc[0] for desc in cur.description]
 
     # Make the changes to the database persistent
@@ -41,46 +51,41 @@ def query_db(sql: str):
     conn.close()
 
     df = pd.DataFrame(data=data, columns=column_names)
-
     return df
+
 
 sql_all_table_names = "SELECT relname FROM pg_class WHERE relkind='r' AND relname !~ '^(pg_|sql_)';"
 all_table_names = query_db(sql_all_table_names)["relname"].tolist()
+if len(all_table_names)==0:
+    initiate_db()
+    all_table_names = query_db(sql_all_table_names)["relname"].tolist()
 
 
 # "## Load Data"
-
 # table_name_insert = st.selectbox("Insert into table", all_table_names)
 # uploaded_file = st.file_uploader("Choose a file")
 # if uploaded_file is not None:
 #     df = pd.read_csv(uploaded_file)
-    
 #     cols = ", ".join([str(i) for i in df.columns.tolist()])
-
 #     db_info = get_config()
-
 #     # Connect to an existing database
 #     conn = psycopg2.connect(**db_info)
-
 #     # Open a cursor to perform database operations
 #     cur = conn.cursor()
-
 #     for i,row in df.iterrows():
 #         st.write(insert_statement, tuple(row))
 #         insert_statement = f"INSERT INTO {table_name_insert} (" +cols + ") VALUES ("  + ")"
 #         st.write(insert_statement, tuple(row))
 #         cur.execute(insert_statement, tuple(row))
 #         conn.commit()
-
 #     cur.close()
 #     conn.close()
 
-"## Read Tables"
 
-table_name = st.selectbox("Choose a table", all_table_names)
-
-f"Display the table"
-
+"## Read Tables from Original Data"
+table_name = st.selectbox("Choose a table to display its contents", all_table_names)
+# all_table_names
+# f"Display the table"
 sql_table = f"SELECT * FROM {table_name};"
 try:
     df = query_db(sql_table)
@@ -91,7 +96,7 @@ except:
     )
 
 
-"## breakdown into customers details"
+"## Order History by Customers"
 st.write("The table below provide historical order details specific to a customer, please select which customer you would like further details on:")
 sql_customer_names = "SELECT full_name FROM Users;"
 customer_names = query_db(sql_customer_names)["full_name"].tolist()
@@ -120,7 +125,7 @@ with summary as (
     and o3.product_id = o2.product_id
 )
 
-select order_date date, sum(total_cost) revenu from summary
+select order_date date, sum(total_cost) revenue from summary
 group by order_date
 order by date
 """
