@@ -17,11 +17,11 @@ In your psql environment, run `CREATE DATABASE alibaba_ecommerce;`
 to create a database. 
 
 Then, in the top directory
-create `database.ini` in the following format:\
-```host=localhost\
-port=5432\
-dbname = alibaba_ecommerce\
-user = [your_psql_username]\
+create `database.ini` in the following format:
+```host=localhost
+port=5432
+dbname = alibaba_ecommerce
+user = [your_psql_username]
 password = [your_psql_password]
 ```
 
