@@ -60,26 +60,6 @@ if len(all_table_names)==0:
     all_table_names = query_db(sql_all_table_names)["relname"].tolist()
 
 
-# "## Load Data"
-# table_name_insert = st.selectbox("Insert into table", all_table_names)
-# uploaded_file = st.file_uploader("Choose a file")
-# if uploaded_file is not None:
-#     df = pd.read_csv(uploaded_file)
-#     cols = ", ".join([str(i) for i in df.columns.tolist()])
-#     db_info = get_config()
-#     # Connect to an existing database
-#     conn = psycopg2.connect(**db_info)
-#     # Open a cursor to perform database operations
-#     cur = conn.cursor()
-#     for i,row in df.iterrows():
-#         st.write(insert_statement, tuple(row))
-#         insert_statement = f"INSERT INTO {table_name_insert} (" +cols + ") VALUES ("  + ")"
-#         st.write(insert_statement, tuple(row))
-#         cur.execute(insert_statement, tuple(row))
-#         conn.commit()
-#     cur.close()
-#     conn.close()
-
 
 "## Read Tables from Original Data"
 table_name = st.selectbox("Choose a table to display its contents", all_table_names)
@@ -95,6 +75,54 @@ except:
     )
 
 
+"## SQL Playground"
+
+# Initialize table information
+category = ['category_id', 'category_name']
+product_belong = ['product_id', 'product_name', 'description', 'category_id']
+vendor = ['vendor_id', 'vendor_name', 'vendor_phone', 'vender_email']
+product_sold_vendor = ['vendor_id', 'product_id']
+carts_has_products_options = ['shopping_cart_id', 'product_id', 'option_id', 'quantity']
+options_associated_with = ['option_id', 'option_name', 'product_id', 'quantity', 'price', 'on_sale', 'specs']
+orders = ['order_id', 'total_item', 'shipping_fee', 'tax', 'total_cost', 'order_date', 'delivery_date',
+          'ship_name', 'ship_address', 'tracking_number', 'delivery_status']
+order_has_product = ['order_id', 'product_id', 'option_id', 'quantity']
+orders_placed_user = ['user_id', 'order_id']
+users = ['user_id', 'username', 'password', 'full_name', 'address', 'email', 'phone']
+user_has_creditcard = ['credit_card_number', 'user_id']
+orders_paid_creditcard = ['order_id', 'credit_card_number', 'user_id']
+
+# Code input block
+with st.form(key='query_form'):
+    raw_code = st.text_area("SQL Code Here", height=200)
+    submit_code = st.form_submit_button("Execute")
+
+# Table of Info
+with st.expander("Table Info"):
+    table_info = {'category':category, 'product_belong':product_belong, 'vendor':vendor, 'product_sold_vendor':product_sold_vendor,
+                  'carts_has_products_options':carts_has_products_options, 'options_associated_with':options_associated_with,
+                  'orders':orders, 'order_has_product':order_has_product, 'orders_placed_user':orders_placed_user,
+                  'users':users, 'user_has_creditcard':user_has_creditcard, 'orders_paid_creditcard':orders_paid_creditcard}
+    st.json(table_info)
+
+# Results Layouts
+if submit_code:
+    st.info("Query Submitted")
+    st.code(raw_code)
+
+    # Results
+    query_results = query_db(raw_code)
+    # with st.expander("Results"):
+    #     st.write(query_results)
+
+    # with st.expander("Results"):
+    #     query_df = pd.DataFrame(query_results)
+    #     st.dataframe(query_df)
+    "#### Results"
+    query_df = pd.DataFrame(query_results)
+    st.dataframe(query_df)
+
+    
 "## Order History by Customers"
 st.write("The table below provide historical order details specific to a customer, please select which customer you would like further details on:")
 sql_customer_names = "SELECT full_name FROM Users;"
@@ -215,50 +243,3 @@ recurring_purchases = query_db(recurring_purchases_sql)
 st.dataframe(recurring_purchases)
 
 
-
-"## SQL Playground"
-
-# Initialize table information
-category = ['category_id', 'category_name']
-product_belong = ['product_id', 'product_name', 'description', 'category_id']
-vendor = ['vendor_id', 'vendor_name', 'vendor_phone', 'vender_email']
-product_sold_vendor = ['vendor_id', 'product_id']
-carts_has_products_options = ['shopping_cart_id', 'product_id', 'option_id', 'quantity']
-options_associated_with = ['option_id', 'option_name', 'product_id', 'quantity', 'price', 'on_sale', 'specs']
-orders = ['order_id', 'total_item', 'shipping_fee', 'tax', 'total_cost', 'order_date', 'delivery_date',
-          'ship_name', 'ship_address', 'tracking_number', 'delivery_status']
-order_has_product = ['order_id', 'product_id', 'option_id', 'quantity']
-orders_placed_user = ['user_id', 'order_id']
-users = ['user_id', 'username', 'password', 'full_name', 'address', 'email', 'phone']
-user_has_creditcard = ['credit_card_number', 'user_id']
-orders_paid_creditcard = ['order_id', 'credit_card_number', 'user_id']
-
-# Code input block
-with st.form(key='query_form'):
-    raw_code = st.text_area("SQL Code Here", height=200)
-    submit_code = st.form_submit_button("Execute")
-
-# Table of Info
-with st.expander("Table Info"):
-    table_info = {'category':category, 'product_belong':product_belong, 'vendor':vendor, 'product_sold_vendor':product_sold_vendor,
-                  'carts_has_products_options':carts_has_products_options, 'options_associated_with':options_associated_with,
-                  'orders':orders, 'order_has_product':order_has_product, 'orders_placed_user':orders_placed_user,
-                  'users':users, 'user_has_creditcard':user_has_creditcard, 'orders_paid_creditcard':orders_paid_creditcard}
-    st.json(table_info)
-
-# Results Layouts
-if submit_code:
-    st.info("Query Submitted")
-    st.code(raw_code)
-
-    # Results
-    query_results = query_db(raw_code)
-    # with st.expander("Results"):
-    #     st.write(query_results)
-
-    # with st.expander("Results"):
-    #     query_df = pd.DataFrame(query_results)
-    #     st.dataframe(query_df)
-    "#### Results"
-    query_df = pd.DataFrame(query_results)
-    st.dataframe(query_df)
